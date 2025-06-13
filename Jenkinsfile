@@ -3,11 +3,18 @@ pipeline {
 
     environment {
         BRANCH = "${env.BRANCH_NAME}"
-        PORT = (env.BRANCH_NAME == 'main') ? '3000' : '3001'
-        IMAGE_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain:v1.0' : 'nodedev:v1.0'
     }
 
     stages {
+        stage('Init Vars') {
+            steps {
+                script {
+                    PORT = (env.BRANCH_NAME == 'main') ? '3000' : '3001'
+                    IMAGE_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain:v1.0' : 'nodedev:v1.0'
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
                 checkout scm
