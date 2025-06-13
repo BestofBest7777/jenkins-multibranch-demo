@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs 'node18' // ← имя, которое ты указал в Global Tool Configuration
+    }
+
     environment {
         BRANCH = "${env.BRANCH_NAME}"
     }
@@ -9,8 +13,11 @@ pipeline {
         stage('Init Vars') {
             steps {
                 script {
-                    PORT = (env.BRANCH_NAME == 'main') ? '3000' : '3001'
-                    IMAGE_NAME = (env.BRANCH_NAME == 'main') ? 'nodemain:v1.0' : 'nodedev:v1.0'
+                    def port = (env.BRANCH_NAME == 'main') ? '3000' : '3001'
+                    def image = (env.BRANCH_NAME == 'main') ? 'nodemain:v1.0' : 'nodedev:v1.0'
+                    // объявляем как локальные переменные, чтобы избежать ворнингов
+                    env.PORT = port
+                    env.IMAGE_NAME = image
                 }
             }
         }
@@ -48,7 +55,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t ${IMAGE_NAME} ."
+                    sh "docker build -t ${env.IMAGE_NAME} ."
                 }
             }
         }
@@ -56,8 +63,8 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 script {
-                    sh "docker rm -f ${BRANCH}-app || true"
-                    sh "docker run -d --name ${BRANCH}-app -p ${PORT}:${PORT} ${IMAGE_NAME}"
+                    sh "docker rm -f ${env.BRANCH}-app || true"
+                    sh "docker run -d --name ${env.BRANCH}-app -p ${env.PORT}:${env.PORT} ${env.IMAGE_NAME}"
                 }
             }
         }
